@@ -4,3 +4,65 @@
 
 /* Простые утилиты */
 .container-page { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+
+/* Темная фиолетовая тема */
+.theme-purple {
+	background-color: #161235; /* чуть светлее общий фон */
+	color: #ffffff;
+}
+
+/* Поверхности/карточки (заменяем белый на фиолетовый оттенок) */
+.theme-purple .bg-white { background-color: #22184d !important; }
+.theme-purple .bg-gray-50 { background-color: #1f1645 !important; }
+.theme-purple .bg-gray-100 { background-color: #2c1f69 !important; }
+.theme-purple .bg-gray-200 { background-color: #372984 !important; }
+
+/* Текстовые оттенки */
+.theme-purple .text-gray-700 { color: #e2e8f0cc !important; }
+.theme-purple .text-gray-600 { color: #d8e0ebcc !important; }
+.theme-purple .text-gray-500 { color: #d8e0eb99 !important; }
+.theme-purple .text-gray-400 { color: #d8e0eb80 !important; }
+
+/* Границы */
+.theme-purple .border { border-color: #3a2a6a !important; }
+.theme-purple .border-b { border-bottom-color: #3a2a6a !important; }
+.theme-purple .border-t { border-top-color: #3a2a6a !important; }
+.theme-purple .border-l { border-left-color: #3a2a6a !important; }
+.theme-purple .border-r { border-right-color: #3a2a6a !important; }
+
+/* Ссылки и кнопки по умолчанию остаются, зелёный (emerald) сохраняем как акцент */
+
+/* Проза — инверсия по умолчанию, если родитель задаёт .prose-invert */
+
+/* Поля ввода: тёмный фон + светлый текст, чтобы белый текст был читабелен */
+.theme-purple input:not([type="checkbox"]):not([type="radio"]),
+.theme-purple textarea,
+.theme-purple select {
+	background-color: #2b1f5b !important; /* тёмно-фиолетовый фон */
+	color: #ffffff !important;            /* белый текст */
+	border-color: #4b3c88 !important;     /* мягкая граница */
+}
+
+/* Плейсхолдеры посветлее */
+.theme-purple input::placeholder,
+.theme-purple textarea::placeholder {
+	color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Фокус: изумрудный акцент и чёткая обводка */
+.theme-purple input:focus,
+.theme-purple textarea:focus,
+.theme-purple select:focus {
+	outline: none !important;
+	border-color: #10b981 !important; /* emerald-500 */
+	box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35) !important; /* мягкое свечение */
+}
+
+/* Деактивированные поля слегка затемняем */
+.theme-purple input:disabled,
+.theme-purple textarea:disabled,
+.theme-purple select:disabled {
+	background-color: #241a4a !important;
+	color: rgba(255, 255, 255, 0.6) !important;
+	border-color: #3d2f75 !important;
+}

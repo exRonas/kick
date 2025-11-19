@@ -64,7 +64,7 @@ export default function EditProject() {
           {updates.map(u => (
             <div key={u.id} className="p-3 border rounded text-sm">
               <div className="text-gray-600">{new Date(u.createdAt).toLocaleString()}</div>
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(rewriteUploadsInHtml(u.content || '')) }} />
+              <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(rewriteUploadsInHtml(u.content || '')) }} />
             </div>
           ))}
         </div>

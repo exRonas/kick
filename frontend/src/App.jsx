@@ -13,10 +13,10 @@ export default function App() {
   const { user } = useAuth();
 
   return (
-    <div>
+    <div className="theme-purple min-h-screen">
       <header className="bg-white border-b">
         <div className="container-page py-3 flex items-center justify-between">
-          <Link to="/" className="font-semibold">Kick</Link>
+          <Link to="/" className="font-semibold">CoEd</Link>
           <div className="flex items-center gap-4">
             <div className="hidden sm:block text-sm text-gray-600">Demo • Реальные платежи отключены</div>
             {!user && (
@@ -26,7 +26,7 @@ export default function App() {
               <Link to="/author" className="px-2 py-1 bg-gray-100 rounded text-sm">Кабинет автора</Link>
             )}
             {user && user.role === 'admin' && (
-              <Link to="/admin" className="px-2 py-1 bg-amber-100 rounded text-sm">Админ</Link>
+              <Link to="/admin" className="px-2 py-1 bg-purple-700 hover:bg-purple-800 text-white rounded text-sm">Админ</Link>
             )}
             <AuthMini />
           </div>

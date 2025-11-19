@@ -48,7 +48,7 @@ export default function ProjectPage() {
             <img src={resolveMediaUrl(project.coverImageUrl)} className="w-full rounded-lg" />
           )}
           <h1 className="text-2xl font-bold">{project.title}</h1>
-          <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(rewriteUploadsInHtml(project.description || '')) }} />
+          <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(rewriteUploadsInHtml(project.description || '')) }} />
 
           {Array.isArray(project.team) && (
             <div>

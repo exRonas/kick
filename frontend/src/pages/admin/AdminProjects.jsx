@@ -91,7 +91,7 @@ export default function AdminProjects() {
             <div className="p-4 space-y-3">
               {view.coverImageUrl && <img src={resolveMediaUrl(view.coverImageUrl)} alt="cover" className="w-full rounded" />}
               <div className="text-sm text-gray-600">Категория: {view.category} • Статус: {t(`status.${view.status}`)}</div>
-              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(rewriteUploadsInHtml(view.description || '')) }} />
+              <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(rewriteUploadsInHtml(view.description || '')) }} />
               {Array.isArray(view.mediaUrls) && view.mediaUrls.length > 0 && (
                 <div>
                   <div className="font-medium mb-2">Медиа</div>

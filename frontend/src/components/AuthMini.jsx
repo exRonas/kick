@@ -19,8 +19,8 @@ export default function AuthMini() {
   if (user) {
     return (
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-gray-700">{user.name} ({user.role})</span>
-  <button className="px-2 py-1 bg-gray-100 rounded" onClick={logout}>Выйти</button>
+        <span className="text-gray-100 font-medium">{user.name} ({user.role})</span>
+        <button className="px-2 py-1 bg-gray-100 rounded" onClick={logout}>Выйти</button>
       </div>
     );
   }
