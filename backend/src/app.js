@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -31,6 +32,18 @@ app.use('/uploads', express.static(path.join(__dirname, '..', '..', 'uploads')))
 // Fallback: если ранее файлы попадали в uploads относительно CWD (например, корня монорепо)
 // попробуем также раздавать и оттуда
 app.use('/uploads', express.static(path.resolve('uploads')));
+
+// Optional frontend static (для минимального деплоя без nginx)
+const distPath = process.env.FRONTEND_DIST_PATH || path.join(__dirname, '..', '..', 'frontend', 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('/', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+  app.get(/^(?!\/api\/).*/, (_req, res, next) => {
+    const indexFile = path.join(distPath, 'index.html');
+    if (fs.existsSync(indexFile)) return res.sendFile(indexFile);
+    return next();
+  });
+}
 
 // Health
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

@@ -23,6 +23,34 @@ npm run dev
 
 Сервер поднимется на `http://localhost:4000`.
 
+### Минимальный продакшен (одно приложение + pm2, без nginx)
+
+Для очень быстрого развёртывания (VDS AlmaLinux 4GB RAM) можно не ставить nginx и раздавать собранный фронт через backend. Шаги:
+
+1. Скопируйте `.env.example` → `.env` и при желании используйте SQLite (без установки MySQL):
+```
+DB_DIALECT=sqlite
+SQLITE_FILE=data.sqlite
+PORT=4000
+JWT_SECRET=СЛОЖНЫЙ_СЕКРЕТ
+```
+2. Установите Node 20+ и клонируйте репозиторий.
+3. Выполните:
+```bash
+bash deploy/minimal_alma.sh
+```
+Скрипт: установит зависимости, выполнит сид, соберёт фронт и запустит pm2. Всё доступно на порту `4000` (API + статика).
+
+Обновление кода:
+```bash
+git pull
+cd backend && npm install --production && node src/seed.js
+cd ../frontend && npm install && npm run build
+pm2 restart kick-backend
+```
+
+Если требуется MySQL — оставьте `DB_DIALECT=mysql` и заполните параметры подключения.
+
 3) Frontend:
 
 ```
@@ -78,3 +106,311 @@ frontend/
 
 - Платежи эмулируются через `utils/mockStripe.js` без внешних API.
 - На продакшене включите HTTPS, CORS-ограничения доменов и храните секреты только в переменных окружения.
+
+## Деплой на VDS (пошагово)
+
+Ниже пример для двух основных семейств Linux:
+
+- Ubuntu/Debian (менеджер пакетов `apt`)
+- AlmaLinux/Rocky/CentOS/RHEL (менеджер пакетов `dnf`/`yum`)
+
+> Если у вас ошибка `sudo: apt: command not found`, значит это не Debian/Ubuntu — используйте блок для `dnf`.
+
+### 1. Подготовка сервера
+
+Определите дистрибутив:
+
+```bash
+cat /etc/*release
+```
+
+Обновите пакеты и установите базовые утилиты.
+
+Ubuntu/Debian:
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl wget git nginx ufw build-essential
+```
+
+Alma/Rocky/CentOS/RHEL:
+```bash
+sudo dnf update -y
+sudo dnf install -y curl wget git nginx
+sudo dnf groupinstall -y "Development Tools"
+```
+
+Откройте HTTP/HTTPS порт.
+
+Ubuntu (UFW):
+```bash
+sudo ufw allow OpenSSH
+sudo ufw allow http
+sudo ufw allow https
+sudo ufw enable
+```
+
+RHEL-семейство (firewalld):
+```bash
+sudo systemctl enable --now firewalld
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --reload
+```
+
+### 2. Установка Node.js
+
+Рекомендуется Node 20+.
+
+Ubuntu/Debian через NodeSource:
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+RHEL через NodeSource:
+```bash
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo dnf install -y nodejs
+```
+
+Проверьте:
+```bash
+node -v
+npm -v
+```
+
+Альтернатива: `nvm` (удобно для смены версий):
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install 20
+```
+
+### 3. Установка MySQL / MariaDB
+
+Ubuntu/Debian (MySQL сервер):
+```bash
+sudo apt install -y mysql-server
+sudo systemctl enable --now mysql
+sudo mysql_secure_installation
+```
+
+RHEL (MariaDB сервер):
+```bash
+sudo dnf install -y mariadb-server
+sudo systemctl enable --now mariadb
+sudo mysql_secure_installation
+```
+
+Создайте базу и пользователя:
+```sql
+CREATE DATABASE kick_prod CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'kick_user'@'localhost' IDENTIFIED BY 'СЛОЖНЫЙ_ПАРОЛЬ';
+GRANT ALL PRIVILEGES ON kick_prod.* TO 'kick_user'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### 4. Клонирование проекта
+
+```bash
+sudo mkdir -p /var/www
+sudo chown $USER:$USER /var/www
+cd /var/www
+git clone https://github.com/ВАШ_РЕПО/kick.git
+cd kick
+```
+
+### 5. Backend настройка
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Отредактируйте `.env`:
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=kick_prod
+DB_USER=kick_user
+DB_PASS=СЛОЖНЫЙ_ПАРОЛЬ
+PORT=4000
+JWT_SECRET=СЛОЖНЫЙ_ДЛИННЫЙ_RANDOM
+JWT_EXPIRES_IN=7d
+CORS_ORIGINS=https://your-domain.ru
+```
+
+Установка зависимостей и сид:
+```bash
+npm install
+npm run seed
+```
+
+Проверочный запуск (foreground):
+```bash
+npm run dev
+```
+
+### 6. Frontend сборка
+
+```bash
+cd ../frontend
+npm install
+npm run build
+```
+
+Получится `frontend/dist` — его отдаст Nginx как статику.
+
+Если бэкенд на том же домене, можно оставить относительные `/api` и `/uploads`. Если другой домен/API, задайте в `.env` фронта:
+```
+VITE_API_URL=https://api.your-domain.ru
+```
+и пересоберите.
+
+### 7. Systemd сервис для backend
+
+Создайте юнит:
+```bash
+sudo nano /etc/systemd/system/kick-backend.service
+```
+Содержимое:
+```
+[Unit]
+Description=Kick Backend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/kick/backend
+ExecStart=/usr/bin/npm run start
+Environment=NODE_ENV=production
+Restart=on-failure
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Создайте пользователя, если нужно:
+```bash
+sudo usermod -a -G www-data $USER
+sudo chown -R www-data:www-data /var/www/kick/backend/uploads
+```
+
+Активируйте:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now kick-backend
+sudo systemctl status kick-backend
+```
+
+Альтернатива: PM2
+```bash
+npm install -g pm2
+pm2 start ecosystem.config.js --only kick-backend
+pm2 save
+pm2 startup systemd
+```
+
+### 8. Nginx конфигурация
+
+```bash
+sudo nano /etc/nginx/sites-available/kick.conf
+```
+Пример:
+```
+server {
+  server_name your-domain.ru;
+  root /var/www/kick/frontend/dist;
+  index index.html;
+
+  # Статика фронта
+  location / {
+    try_files $uri /index.html;
+  }
+
+  # API прокси
+  location /api/ {
+    proxy_pass http://127.0.0.1:4000/api/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  # Загрузки
+  location /uploads/ {
+    proxy_pass http://127.0.0.1:4000/uploads/;
+    proxy_set_header Host $host;
+  }
+}
+```
+
+Активируйте:
+```bash
+sudo ln -s /etc/nginx/sites-available/kick.conf /etc/nginx/sites-enabled/kick.conf
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+### 9. HTTPS (Let’s Encrypt)
+
+Ubuntu:
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d your-domain.ru --email you@domain.ru --agree-tos --redirect
+```
+
+RHEL (через snapd или certbot пакет, зависит от репо): установите certbot и используйте аналогичную команду.
+
+### 10. Логи и мониторинг
+
+- Backend stdout: `journalctl -u kick-backend -f`
+- Nginx доступ/ошибки: `/var/log/nginx/access.log`, `/var/log/nginx/error.log`
+- PM2 (если используется): `pm2 logs kick-backend`
+
+### 11. Резервное копирование БД
+
+Dump:
+```bash
+mysqldump -u kick_user -p kick_prod > /root/kick_prod_$(date +%F).sql
+```
+Автоматизируйте через cron (`crontab -e`).
+
+### 12. Обновления деплоя
+
+```bash
+cd /var/www/kick
+git pull
+cd backend && npm install && npm run migrate || npm run seed
+sudo systemctl restart kick-backend
+cd ../frontend && npm install && npm run build
+sudo systemctl restart nginx
+```
+
+### 13. Настройки безопасности
+
+- Смените все дефолтные пароли и `JWT_SECRET`.
+- Ограничьте SSH (ключи, порт, Fail2Ban).
+- Следите за обновлениями: `apt upgrade` или `dnf update` регулярно.
+- Не храните `.env` в репозитории.
+
+### 14. Проверка CORS
+
+`CORS_ORIGINS` в `.env` backend укажите точный протокол и домен: `https://your-domain.ru`.
+Разделяйте запятыми, если несколько.
+
+### 15. Тест после деплоя
+
+Откройте `https://your-domain.ru` → зарегистрируйтесь → создайте проект → загрузите обложку → удостоверьтесь, что `/uploads/...` работает.
+
+### 16. Возможные доработки (необязательно)
+
+- Настроить автоматическое удаление старых проектов из корзины (cron/worker).
+- Вынести MySQL на отдельный управляемый сервис.
+- Добавить централизованный логгер (pino + ротация).
+- Включить WAF/Cloudflare перед сервером.
+
+---
+Если ваш дистрибутив не совпадает с примерами — адаптируйте пакетные менеджеры и пути, логика остаётся той же.
