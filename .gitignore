@@ -13,7 +13,6 @@ yarn-debug.log*
 pnpm-debug.log*
 
 # Env files (keep .env.example tracked)
-.env
 .env.*
 !.env.example
 backend/.env

@@ -11,8 +11,34 @@ function signToken(user) {
 
 export async function getPrice(_req, res) {
   const row = await Config.findOne({ where: { key: 'subscriptionMonthly' } });
-  const rub = row?.value?.rub ?? null;
-  res.json({ rub });
+  console.log('DEBUG subscriptionMonthly row.value=', row?.value, 'type=', typeof row?.value);
+  const rawVal = row?.value;
+  let obj;
+  if (rawVal == null) {
+    obj = {};
+  } else if (typeof rawVal === 'string') {
+    // Попытка распарсить JSON либо взять число из строки
+    try {
+      const parsed = JSON.parse(rawVal);
+      obj = parsed;
+    } catch {
+      // Может быть просто число в строке
+      const asNum = Number(rawVal);
+      if (!Number.isNaN(asNum)) {
+        return res.json({ rub: asNum });
+      }
+      obj = {};
+    }
+  } else if (typeof rawVal === 'number') {
+    return res.json({ rub: rawVal });
+  } else {
+    obj = rawVal; // уже объект (JSON)
+  }
+  // поддержка возможной опечатки run/price/amount
+  const candidates = [obj.rub, obj.run, obj.price, obj.amount];
+  const first = candidates.find(v => v !== undefined && v !== null);
+  const rub = first !== undefined ? Number(first) : null;
+  res.json({ rub: Number.isNaN(rub) ? null : rub });
 }
 
 export async function subscribeAuthor(req, res) {
@@ -31,7 +57,24 @@ export async function subscribeAuthor(req, res) {
   if (user.activeSubscription) return res.status(400).json({ message: 'Подписка уже активна' });
 
   const priceRow = await Config.findOne({ where: { key: 'subscriptionMonthly' } });
-  const amountRub = priceRow?.value?.rub ?? 0;
+    const rawVal2 = priceRow?.value;
+    let obj2;
+    if (rawVal2 == null) {
+      obj2 = {};
+    } else if (typeof rawVal2 === 'string') {
+      try {
+        obj2 = JSON.parse(rawVal2);
+      } catch {
+        const num = Number(rawVal2);
+        obj2 = Number.isNaN(num) ? {} : { rub: num };
+      }
+    } else if (typeof rawVal2 === 'number') {
+      obj2 = { rub: rawVal2 };
+    } else {
+      obj2 = rawVal2;
+    }
+    const amountCandidate = obj2.rub ?? obj2.run ?? obj2.price ?? obj2.amount ?? null;
+    const amountRub = amountCandidate !== null ? Number(amountCandidate) : 0;
   if (!amountRub || amountRub <= 0) return res.status(500).json({ message: 'Стоимость подписки не настроена' });
 
   // Mock оплата (как донаты) — просто создаём запись подписки

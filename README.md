@@ -61,6 +61,103 @@ pm2 restart kick-backend
 
 Если требуется MySQL — оставьте `DB_DIALECT=mysql` и заполните параметры подключения.
 
+### Запуск через PM2 (ecosystem.config.js)
+
+Если вы хотите быстро поднять только backend (который также может раздавать собранный фронт), используйте `backend/ecosystem.config.js`.
+
+1. Установите pm2 глобально (однократно):
+```bash
+npm install -g pm2
+```
+2. Скопируйте `backend/.env.example` → `backend/.env` и задайте переменные. Для SQLite минимально:
+```
+DB_DIALECT=sqlite
+SQLITE_FILE=data.sqlite
+PORT=4000
+JWT_SECRET=СЛОЖНЫЙ_СЕКРЕТ
+```
+3. Установка зависимостей и подготовка:
+```bash
+cd backend
+npm install --production
+node src/seed.js
+```
+4. (Опционально) Собрать фронтенд и указать путь, если хотите чтобы backend обслуживал статику:
+```bash
+cd ../frontend
+npm install
+npm run build
+```
+Скопируйте/оставьте путь сборки и добавьте переменную в `.env` backend, например:
+```
+FRONTEND_DIST_PATH=../frontend/dist
+```
+5. Запуск через pm2 из каталога `backend`:
+Переименовать
+```bash
+pm2 start ecosystem.config.js -> pm2 start ecosystem.config.cjs
+```
+
+```bash
+pm2 start ecosystem.config.cjs --only kick-backend
+```
+Проверка:
+```bash
+pm2 list
+pm2 logs kick-backend --lines 50
+```
+6. Автостарт при перезагрузке сервера:
+```bash
+pm2 save
+pm2 startup systemd
+```
+Выполните выводимую команду (copy/paste), затем снова `pm2 save`.
+
+#### Обновление кода (pull + rebuild)
+
+Из корня репозитория:
+```bash
+git pull
+cd backend
+npm install --production
+node src/seed.js
+cd ../frontend
+npm install
+npm run build
+cd ../backend
+pm2 restart kick-backend
+```
+
+#### Просмотр состояния и логов
+```bash
+pm2 status
+pm2 show kick-backend
+pm2 logs kick-backend --lines 100
+```
+
+#### Перезапуск и остановка
+```bash
+pm2 restart kick-backend
+pm2 stop kick-backend
+pm2 delete kick-backend
+```
+
+#### Ротация логов (избавиться от роста файлов)
+```bash
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 10M
+pm2 set pm2-logrotate:retain 7
+```
+
+#### Настройка цены подписки вручную (если отсутствует или опечатка)
+Одноразово:
+```bash
+node -e "import('./src/models/index.js').then(async m=>{const {Config}=m; const row=await Config.findOne({where:{key:'subscriptionMonthly'}}); if(row){row.value={rub:499}; await row.save(); console.log('Updated');} else {await Config.create({key:'subscriptionMonthly', value:{rub:499}}); console.log('Created');} process.exit(0);})"
+```
+
+После этого эндпоинт `/api/subscription/price` должен вернуть `{"rub":499}`.
+
+
 3) Frontend:
 
 ```
