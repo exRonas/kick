@@ -31,8 +31,8 @@ export function AuthProvider({ children }) {
     return r.data.user;
   }
 
-  async function register({ name, email, password, role }) {
-    const r = await api.post('/auth/register', { name, email, password, role });
+  async function register({ name, email, password }) {
+    const r = await api.post('/auth/register', { name, email, password });
     applyAuth({ user: r.data.user, token: r.data.token });
     return r.data.user;
   }
@@ -44,7 +44,19 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
-  const value = useMemo(() => ({ user, token, login, register, logout }), [user, token]);
+  async function requestAuthor() {
+    const r = await api.post('/auth/apply-author');
+    applyAuth({ user: r.data.user, token: r.data.token });
+    return r.data.user;
+  }
+
+  async function subscribeAuthor() {
+    const r = await api.post('/subscription/author');
+    applyAuth({ user: r.data.user, token: r.data.token });
+    return r.data;
+  }
+
+  const value = useMemo(() => ({ user, token, login, register, logout, requestAuthor, subscribeAuthor }), [user, token]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

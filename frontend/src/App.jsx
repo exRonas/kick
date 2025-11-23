@@ -5,9 +5,17 @@ import ProjectPage from './pages/ProjectPage.jsx';
 import Register from './pages/Register.jsx';
 import AuthorDashboard from './pages/author/AuthorDashboard.jsx';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import SubscribeAuthor from './pages/SubscribeAuthor.jsx';
 import './i18n.js';
-import AuthMini from './components/AuthMini.jsx';
+import { useState } from 'react';
 import { useAuth } from './context/AuthContext.jsx';
+import AuthMini from './components/AuthMini.jsx';
+
+function BecomeAuthorLink() {
+  return (
+    <Link to="/subscribe-author" className="px-2 py-1 bg-purple-700 hover:bg-purple-800 text-white rounded text-sm">Стать автором</Link>
+  );
+}
 
 export default function App() {
   const { user } = useAuth();
@@ -25,6 +33,9 @@ export default function App() {
             {user && user.role === 'author' && (
               <Link to="/author" className="px-2 py-1 bg-gray-100 rounded text-sm">Кабинет автора</Link>
             )}
+            {user && user.role === 'donor' && (
+              <BecomeAuthorLink />
+            )}
             {user && user.role === 'admin' && (
               <Link to="/admin" className="px-2 py-1 bg-purple-700 hover:bg-purple-800 text-white rounded text-sm">Админ</Link>
             )}
@@ -38,6 +49,7 @@ export default function App() {
           <Route path="/project/:id" element={<ProjectPage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/author/*" element={<AuthorDashboard />} />
+          <Route path="/subscribe-author" element={<SubscribeAuthor />} />
           <Route path="/admin/*" element={<AdminDashboard />} />
         </Routes>
       </main>

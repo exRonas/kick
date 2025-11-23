@@ -44,4 +44,14 @@ export async function migrateSchema() {
   } catch (e) {
     // Table may not exist yet; ignore and rely on sync
   }
+
+  // Ensure users.authorRequested exists
+  try {
+    const udesc = await qi.describeTable('users');
+    if (!('authorRequested' in udesc)) {
+      await qi.addColumn('users', 'authorRequested', { type: 'TINYINT(1)', allowNull: false, defaultValue: 0 });
+    }
+  } catch (e) {
+    // ignore if table not ready yet
+  }
 }

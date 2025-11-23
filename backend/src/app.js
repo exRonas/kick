@@ -12,6 +12,7 @@ import donationsRoutes from './routes/donations.js';
 import authorRoutes from './routes/author.js';
 import uploadsRoutes from './routes/uploads.js';
 import adminRoutes from './routes/admin.js';
+import subscriptionRoutes from './routes/subscription.js';
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use('/api/projects/:id/donations', donationsRoutes);
 app.use('/api/author', authorRoutes);
 app.use('/api/uploads', uploadsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/subscription', subscriptionRoutes);
 
 // Error handler
 // eslint-disable-next-line no-unused-vars

@@ -6,7 +6,6 @@ export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('donor');
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -15,7 +14,7 @@ export default function Register() {
     e.preventDefault();
     setError('');
     try {
-      const u = await register({ name, email, password, role });
+      const u = await register({ name, email, password });
       navigate('/');
     } catch (e) {
       setError(e?.response?.data?.message || 'Ошибка регистрации');
@@ -29,11 +28,7 @@ export default function Register() {
         <input className="w-full border rounded px-3 py-2" placeholder="Имя" value={name} onChange={(e) => setName(e.target.value)} required />
         <input className="w-full border rounded px-3 py-2" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <input className="w-full border rounded px-3 py-2" placeholder="Пароль" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <label className="block text-sm text-gray-700">Роль</label>
-        <select className="w-full border rounded px-3 py-2" value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="donor">Донатор</option>
-          <option value="author">Автор</option>
-        </select>
+        <div className="text-xs text-gray-500">После регистрации вы будете донатором. Стать автором можно позже через кнопку «Стать автором».</div>
         {error && <div className="text-red-600 text-sm">{error}</div>}
         <button className="w-full py-2 bg-emerald-600 text-white rounded">Создать аккаунт</button>
       </form>
