@@ -38,8 +38,8 @@ export async function getProject(req, res) {
 export async function updateProject(req, res) {
   const p = await Project.findByPk(req.params.id);
   if (!p) return res.status(404).json({ message: 'Проект не найден' });
-  const fields = ['title', 'shortDescription', 'description', 'category', 'goalAmount', 'coverImageUrl', 'mediaUrls', 'team', 'status', 'raisedAmount'];
-  for (const f of fields) if (typeof req.body[f] !== 'undefined') p[f] = req.body[f];
+  // Админ может только модерировать статус проекта
+  if (typeof req.body.status !== 'undefined') p.status = req.body.status;
   await p.save();
   res.json(p);
 }

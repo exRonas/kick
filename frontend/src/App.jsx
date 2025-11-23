@@ -22,7 +22,7 @@ export default function App() {
             {!user && (
               <Link to="/register" className="px-2 py-1 bg-gray-900 text-white rounded text-sm">Зарегистрироваться</Link>
             )}
-            {user && (user.role === 'author' || user.role === 'admin') && (
+            {user && user.role === 'author' && (
               <Link to="/author" className="px-2 py-1 bg-gray-100 rounded text-sm">Кабинет автора</Link>
             )}
             {user && user.role === 'admin' && (

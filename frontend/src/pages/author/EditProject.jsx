@@ -16,7 +16,12 @@ export default function EditProject() {
 
   useEffect(() => {
     api.get(`/projects/${id}`)
-      .then(r => setProject(r.data))
+      .then(r => {
+        const p = r.data || {};
+        if (!Array.isArray(p.mediaUrls)) p.mediaUrls = Array.isArray(p.mediaUrls) ? p.mediaUrls : [];
+        if (!Array.isArray(p.team)) p.team = Array.isArray(p.team) ? p.team : [];
+        setProject(p);
+      })
       .catch(e => setError(e?.response?.data?.message || e.message));
     api.get(`/author/projects/${id}/updates`)
       .then(r => setUpdates(r.data))

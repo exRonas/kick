@@ -5,7 +5,7 @@ export default function TrashedProjects() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [confirmPurge, setConfirmPurge] = useState(false);
+  // Авторам больше нельзя очищать корзину навсегда
 
   async function load() {
     setLoading(true);
@@ -30,31 +30,14 @@ export default function TrashedProjects() {
     }
   }
 
-  async function purgeAll() {
-    try {
-      await api.post('/author/trash/purge');
-      setConfirmPurge(false);
-      await load();
-    } catch (e) {
-      alert(e?.response?.data?.message || e.message);
-    }
-  }
+  // purgeAll удалён для авторов
 
   if (loading) return <div>Загрузка…</div>;
   if (error) return <div className="text-red-600">{error}</div>;
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        {confirmPurge ? (
-          <>
-            <button className="px-3 py-2 bg-red-600 text-white rounded" onClick={purgeAll}>Подтвердить очистку корзины</button>
-            <button className="px-3 py-2 bg-gray-100 rounded" onClick={() => setConfirmPurge(false)}>Отмена</button>
-          </>
-        ) : (
-          <button className="px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded" onClick={() => setConfirmPurge(true)}>Очистить корзину</button>
-        )}
-      </div>
+      {/* Очистка корзины доступна только администратору в админ-панели */}
       {items.length === 0 && <div>Корзина пуста.</div>}
       {items.map(p => (
         <div key={p.id} className="p-3 border rounded flex items-center justify-between">

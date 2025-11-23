@@ -43,11 +43,11 @@ export default function MyProjects() {
             <Link className="px-2 py-1 bg-gray-100 rounded" to={`/author/${p.id}/stats`}>Статистика</Link>
             {confirmId === p.id ? (
               <div className="flex gap-2 items-center">
-                <button className="px-2 py-1 bg-red-600 text-white rounded" onClick={() => del(p.id)}>Подтвердить удаление</button>
+                <button className="px-2 py-1 bg-red-600 text-white rounded" onClick={() => del(p.id)}>Подтвердить архивирование</button>
                 <button className="px-2 py-1 bg-gray-100 rounded" onClick={() => setConfirmId(null)}>Отмена</button>
               </div>
             ) : (
-              <button className="px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded" onClick={() => setConfirmId(p.id)}>Удалить</button>
+              <button className="px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded" onClick={() => setConfirmId(p.id)}>Архивировать</button>
             )}
           </div>
         </div>

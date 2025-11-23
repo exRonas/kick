@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
 import { authRequired, requireRole, requireActiveSubscription } from '../middleware/auth.js';
-import { myProjects, createProject, updateProject, addUpdate, listUpdates, projectStats, deleteProject, listTrashed, restoreProject, purgeMyTrash } from '../controllers/authorController.js';
+import { myProjects, createProject, updateProject, addUpdate, listUpdates, projectStats, deleteProject, listTrashed, restoreProject } from '../controllers/authorController.js';
 
 const router = Router();
 
 // Все роуты автора — под защитой
-router.use(authRequired, requireRole('author', 'admin'), requireActiveSubscription);
+// Доступ только для авторов (админы управляют через /admin)
+router.use(authRequired, requireRole('author'), requireActiveSubscription);
 
 router.get('/projects', myProjects);
 router.post(
@@ -34,7 +35,7 @@ router.put(
 router.delete('/projects/:id', deleteProject);
 router.get('/projects/trashed/list', listTrashed);
 router.post('/projects/:id/restore', restoreProject);
-router.post('/trash/purge', purgeMyTrash);
+// Удаление навсегда недоступно авторам
 
 router.post('/projects/:id/updates', [body('content').isString().isLength({ min: 3 })], addUpdate);
 router.get('/projects/:id/updates', listUpdates);

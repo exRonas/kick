@@ -10,7 +10,7 @@ export default function AuthorDashboard() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || 'null');
   if (!user) return <div className="container-page py-6">Требуется вход</div>;
-  if (user.role !== 'author' && user.role !== 'admin') return <div className="container-page py-6">Доступ только для авторов</div>;
+  if (user.role !== 'author') return <div className="container-page py-6">Доступ только для авторов</div>;
 
   return (
     <div className="container-page py-6">

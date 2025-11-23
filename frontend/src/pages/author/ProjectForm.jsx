@@ -9,8 +9,8 @@ export default function ProjectForm({ initial = {}, onSubmit, submitLabel = 'С�
   const [category, setCategory] = useState(initial.category || 'ИТ');
   const [goalAmount, setGoalAmount] = useState(initial.goalAmount || 100000);
   const [coverImageUrl, setCoverImageUrl] = useState(initial.coverImageUrl || '');
-  const [mediaUrls, setMediaUrls] = useState(initial.mediaUrls || []);
-  const [team, setTeam] = useState(initial.team || []);
+  const [mediaUrls, setMediaUrls] = useState(Array.isArray(initial.mediaUrls) ? initial.mediaUrls : []);
+  const [team, setTeam] = useState(Array.isArray(initial.team) ? initial.team : []);
   const [error, setError] = useState('');
 
   function addMedia(url) { setMediaUrls((prev) => [...prev, url]); }
